@@ -196,6 +196,7 @@ void A_init(void)
 		     so initially this is set to -1
 		   */
   windowcount = 0;
+  bool acked[WINDOWSIZE]; // array to track which packets in the window have been ACKed (1 means ACKed, 0 means not)
 }
 
 
