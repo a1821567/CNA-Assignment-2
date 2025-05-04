@@ -25,7 +25,7 @@
 #define RTT  16.0       /* round trip time.  MUST BE SET TO 16.0 when submitting assignment */
 #define WINDOWSIZE 6    /* the maximum number of buffered unacked packet
                           MUST BE SET TO 6 when submitting assignment */
-#define SEQSPACE 7      /* the min sequence space for GBN must be at least windowsize + 1 */
+#define SEQSPACE 12      /* the min sequence space for SR must be at least windowsize * 2 */
 #define NOTINUSE (-1)   /* used to fill header fields that are not being used */
 
 /* generic procedure to compute the checksum of a packet.  Used by both sender and receiver
@@ -83,7 +83,7 @@ void A_output(struct msg message)
 
     /* put packet in window buffer */
     /* windowlast will always be 0 for alternating bit; but not for GoBackN */
-    windowlast = (windowlast + 1) % WINDOWSIZE;
+    windowlast = (windowlast + 1) % WINDOWSIZE; // modulo makes window index circle back around to start
     buffer[windowlast] = sendpkt;
     windowcount++;
 
@@ -122,7 +122,8 @@ void A_input(struct pkt packet)
       printf("----A: uncorrupted ACK %d is received\n",packet.acknum);
     total_ACKs_received++;
 
-    /* check if new ACK or duplicate */
+    /* previously we had "check if new ACK or duplicate".
+    Now we don't need to do this, since ACKs are handled individually. */
     if (windowcount != 0) {
           int seqfirst = buffer[windowfirst].seqnum;
           int seqlast = buffer[windowlast].seqnum;
