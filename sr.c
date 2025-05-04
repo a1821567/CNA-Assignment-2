@@ -62,7 +62,8 @@ static struct pkt buffer[SEQSPACE];  /* array for storing packets waiting for AC
                                       sequence numbers */
 static int oldestUnacked;                /* seqnum of the oldest unACKED packet */
 static int A_nextseqnum;               /* the next sequence number to be used by the sender */
-static bool acked[SEQSPACE]; // array to track which packets in the window have been ACKed (1 means ACKed, 0 means not)
+static bool acked[SEQSPACE]; /* array to track which packets in the window have been ACKed (1 means ACKed, 0 means not) */
+static bool timer_running; /* records whether timer is currently running */ 
 
 /* called from layer 5 (application layer), passed the message to be sent to other side */
 void A_output(struct msg message)
@@ -73,7 +74,7 @@ void A_output(struct msg message)
   /* if not blocked waiting on ACK. 
   For GBN this was "windowcount < WINDOWSIZE". windowcount no longer exists - we need to express
   the number of packets in the window in terms of other variables instead*/
-  if ( ((A_nextseqnum - base + SEQSPACE) % SEQSPACE) < WINDOWSIZE) { // modulo allows seqnums to wrap
+  if ( ((A_nextseqnum - oldestUnacked + SEQSPACE) % SEQSPACE) < WINDOWSIZE) { // modulo allows seqnums to wrap
     if (TRACE > 1)
       printf("----A: New message arrives, send window is not full, send new messge to layer3!\n");
 
@@ -93,8 +94,9 @@ void A_output(struct msg message)
     tolayer3 (A, sendpkt);
 
     /* start timer if first packet in window */
-    if (windowcount == 1)
-      starttimer(A,RTT);
+    if (!timer_running)
+      starttimer(A, RTT);
+      timer_running = true;
 
     /* get next sequence number, wrap back to 0 */
     A_nextseqnum = (A_nextseqnum + 1) % SEQSPACE;
@@ -134,12 +136,18 @@ void A_input(struct pkt packet)
       /* update the oldest unACKed packet if necessary*/
       while (acked[oldestUnacked]){
         oldestUnacked = (oldestUnacked + 1) % SEQSPACE;
-      }
 
-	    /* start timer again if there are still more unacked packets in window */
-      stoptimer(A);
-      if (windowcount > 0)
-        starttimer(A, RTT);
+        /*stop timer*/
+        stoptimer(A);
+        timer_running = false;
+
+        /*Unless we have reached the end of the received packets, restart timer for next oldest unACKed packet*/
+        if (oldestUnacked != A_nextseqnum){
+          starttimer(A, RTT);
+          timer_running = true;
+        }
+        
+      }
     }
     else
       if (TRACE > 0)
@@ -178,6 +186,7 @@ void A_init(void)
   /* initialise A's window, buffer and sequence number */
   A_nextseqnum = 0;  /* A starts with seq num 0, do not change this */
   oldestUnacked = 0; /* Oldest unACKed packet*/
+  timer_running = false; /* timer is initally off*/
 
   for (int i = 0; i < SEQSPACE; i++)
     acked[i] = false;
