@@ -62,7 +62,8 @@ static struct pkt buffer[SEQSPACE];  /* array for storing packets waiting for AC
                                       sequence numbers */
 static int oldestUnacked;                /* seqnum of the oldest unACKED packet */
 static int A_nextseqnum;               /* the next sequence number to be used by the sender */
-static bool acked[SEQSPACE]; /* array to track which packets in the window have been ACKed (1 means ACKed, 0 means not) */
+static bool acked[SEQSPACE]; /* array to track which packets have been ACKed (1 means ACKed, 0 means not) */
+static bool sent[SEQSPACE]; /* array to track which packets have been sent*/
 static bool timer_running; /* records whether timer is currently running */ 
 
 /* called from layer 5 (application layer), passed the message to be sent to other side */
@@ -87,6 +88,9 @@ void A_output(struct msg message)
 
     /* put packet in window buffer */
     buffer[sendpkt.seqnum] = sendpkt;
+
+    /* mark  packet as sent */
+    sent[A_nextseqnum] = true
 
     /* send out packet */
     if (TRACE > 0)
@@ -166,14 +170,23 @@ void A_timerinterrupt(void)
   if (TRACE > 0)
     printf("----A: time out,resend packets!\n");
 
-  for(i=0; i<windowcount; i++) {
+  for(i=0; i<WINDOWSIZE; i++) {
+    int seq = (oldestUnacked + i) % SEQSPACE; /* seqnums to loop over*/
 
     if (TRACE > 0)
-      printf ("---A: resending packet %d\n", (buffer[(windowfirst+i) % WINDOWSIZE]).seqnum);
+      printf ("---A: resending packet %d\n", seq;
 
-    tolayer3(A,buffer[(windowfirst+i) % WINDOWSIZE]);
-    packets_resent++;
-    if (i==0) starttimer(A,RTT);
+    /* Resend packets that have already been sent but have not been ACKed*/
+    if (sent[seq] && !acked[seq]){
+      tolayer3(A, buffer[seq]);
+      packets_resent++;
+    }
+    
+    if (i==0){
+      starttimer(A,RTT);
+      timer_running = true;
+    }
+    
   }
 }
 
@@ -190,6 +203,7 @@ void A_init(void)
 
   for (int i = 0; i < SEQSPACE; i++)
     acked[i] = false;
+    sent[i] = false;
 }
 
 
