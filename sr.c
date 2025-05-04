@@ -75,7 +75,7 @@ void A_output(struct msg message)
   /* if not blocked waiting on ACK. 
   For GBN this was "windowcount < WINDOWSIZE". windowcount no longer exists - we need to express
   the number of packets in the window in terms of other variables instead*/
-  if ( ((A_nextseqnum - oldestUnacked + SEQSPACE) % SEQSPACE) < WINDOWSIZE) { // modulo allows seqnums to wrap
+  if ( ((A_nextseqnum - oldestUnacked + SEQSPACE) % SEQSPACE) < WINDOWSIZE) { /*modulo allows seqnums to wrap*/ 
     if (TRACE > 1)
       printf("----A: New message arrives, send window is not full, send new messge to layer3!\n");
 
@@ -90,7 +90,7 @@ void A_output(struct msg message)
     buffer[sendpkt.seqnum] = sendpkt;
 
     /* mark  packet as sent */
-    sent[A_nextseqnum] = true
+    sent[A_nextseqnum] = true;
 
     /* send out packet */
     if (TRACE > 0)
@@ -98,10 +98,11 @@ void A_output(struct msg message)
     tolayer3 (A, sendpkt);
 
     /* start timer if first packet in window */
-    if (!timer_running)
+    if (!timer_running){
       starttimer(A, RTT);
       timer_running = true;
-
+    }
+      
     /* get next sequence number, wrap back to 0 */
     A_nextseqnum = (A_nextseqnum + 1) % SEQSPACE;
   }
@@ -119,9 +120,6 @@ void A_output(struct msg message)
 */
 void A_input(struct pkt packet)
 {
-  int ackcount = 0;
-  int i;
-
   /* if received ACK is not corrupted */
   if (!IsCorrupted(packet)) {
     if (TRACE > 0)
@@ -174,7 +172,7 @@ void A_timerinterrupt(void)
     int seq = (oldestUnacked + i) % SEQSPACE; /* seqnums to loop over*/
 
     if (TRACE > 0)
-      printf ("---A: resending packet %d\n", seq;
+      printf ("---A: resending packet %d\n", seq);
 
     /* Resend packets that have already been sent but have not been ACKed*/
     if (sent[seq] && !acked[seq]){
