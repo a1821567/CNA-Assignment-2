@@ -176,14 +176,9 @@ void A_init(void)
 {
   /* initialise A's window, buffer and sequence number */
   A_nextseqnum = 0;  /* A starts with seq num 0, do not change this */
-  windowfirst = 0;
-  windowlast = -1;   /* windowlast is where the last packet sent is stored.
-		     new packets are placed in winlast + 1
-		     so initially this is set to -1
-		   */
-  windowcount = 0;
+  oldestUnacked = 0; /* Oldest unACKed packet*/
 
-  for (int i = 0; i < WINDOWSIZE; i++)
+  for (int i = 0; i < SEQSPACE; i++)
     acked[i] = false;
 }
 
