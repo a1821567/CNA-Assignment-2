@@ -25,7 +25,7 @@
 #define RTT  16.0       /* round trip time.  MUST BE SET TO 16.0 when submitting assignment */
 #define WINDOWSIZE 6    /* the maximum number of buffered unacked packet
                           MUST BE SET TO 6 when submitting assignment */
-#define SEQSPACE 12      /* the min sequence space for SR must be at least windowsize * 2 */
+#define SEQSPACE 13      /* the min sequence space for SR must be at least windowsize * 2 */
 #define NOTINUSE (-1)   /* used to fill header fields that are not being used */
 
 /* generic procedure to compute the checksum of a packet.  Used by both sender and receiver
@@ -62,7 +62,7 @@ static struct pkt buffer[SEQSPACE];  /* array for storing packets waiting for AC
                                       sequence numbers */
 static int oldestUnacked;                /* seqnum of the oldest unACKED packet */
 static int A_nextseqnum;               /* the next sequence number to be used by the sender */
-static bool acked[WINDOWSIZE]; // array to track which packets in the window have been ACKed (1 means ACKed, 0 means not)
+static bool acked[SEQSPACE]; // array to track which packets in the window have been ACKed (1 means ACKed, 0 means not)
 
 /* called from layer 5 (application layer), passed the message to be sent to other side */
 void A_output(struct msg message)
@@ -123,12 +123,18 @@ void A_input(struct pkt packet)
     total_ACKs_received++;
 
     /* check if new ACK or duplicate */
-    if (acked[packet.seqnum] == false) {
+    if (!acked[packet.acknum]) {
       /* packet is a new ACK */
+      acked[packet.acknum] = true;
 
       if (TRACE > 0)
         printf("----A: ACK %d is not a duplicate\n",packet.acknum);
       new_ACKs++;
+
+      /* update the oldest unACKed packet if necessary*/
+      while (acked[oldestUnacked]){
+        oldestUnacked = (oldestUnacked + 1) % SEQSPACE;
+      }
 
       /* delete the acked packets from window buffer */
       for (i=0; i<ackcount; i++)
