@@ -70,8 +70,10 @@ void A_output(struct msg message)
   struct pkt sendpkt;
   int i;
 
-  /* if not blocked waiting on ACK */
-  if ( windowcount < WINDOWSIZE) {
+  /* if not blocked waiting on ACK. 
+  For GBN this was "windowcount < WINDOWSIZE". windowcount no longer exists - we need to express
+  the number of packets in the window in terms of other variables instead*/
+  if ( ((A_nextseqnum - base + SEQSPACE) % SEQSPACE) < WINDOWSIZE) { // modulo allows seqnums to wrap
     if (TRACE > 1)
       printf("----A: New message arrives, send window is not full, send new messge to layer3!\n");
 
@@ -83,10 +85,7 @@ void A_output(struct msg message)
     sendpkt.checksum = ComputeChecksum(sendpkt);
 
     /* put packet in window buffer */
-    /* windowlast will always be 0 for alternating bit; but not for GoBackN */
-    windowlast = (windowlast + 1) % WINDOWSIZE; // modulo makes window index circle back around to start
-    buffer[windowlast] = sendpkt;
-    windowcount++;
+    buffer[sendpkt.seqnum] = sendpkt;
 
     /* send out packet */
     if (TRACE > 0)
