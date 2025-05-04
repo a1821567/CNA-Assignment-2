@@ -178,13 +178,10 @@ void A_timerinterrupt(void)
     if (sent[seq] && !acked[seq]){
       tolayer3(A, buffer[seq]);
       packets_resent++;
-    }
-    
-    if (i==0){
-      starttimer(A,RTT);
+
+      starttimer(A, RTT);
       timer_running = true;
     }
-    
   }
 }
 
@@ -232,9 +229,6 @@ void B_input(struct pkt packet)
     /* record that the packet has been received*/
     received[packet.seqnum] = true;
     recv_buffer[packet.seqnum] = packet;
-
-    /* update state variables */
-    expectedseqnum = (expectedseqnum + 1) % SEQSPACE;
 
     /* always send an ACK for the received packet, even if duplicate or out of order*/
     /* Must use sequence number of the received packet for ACK */
