@@ -194,14 +194,18 @@ void A_timerinterrupt(void)
 /* entity A routines are called. You can use it to do any initialization */
 void A_init(void)
 {
+  int i;
+
   /* initialise A's window, buffer and sequence number */
   A_nextseqnum = 0;  /* A starts with seq num 0, do not change this */
   oldestUnacked = 0; /* Oldest unACKed packet*/
   timer_running = false; /* timer is initally off*/
 
-  for (int i = 0; i < SEQSPACE; i++)
+  for (i = 0; i < SEQSPACE; i++){
     acked[i] = false;
     sent[i] = false;
+  }
+    
 }
 
 
@@ -265,10 +269,12 @@ void B_input(struct pkt packet)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init(void)
 {
+  int i;
+
   expectedseqnum = 0;
   B_nextseqnum = 1;
 
-  for (int i = 0; i < SEQSPACE; i++)
+  for (i = 0; i < SEQSPACE; i++)
     received[i] = false;
 }
 
