@@ -140,12 +140,14 @@ void A_input(struct pkt packet)
       /* update the oldest unACKed packet if necessary*/
       while (acked[oldestUnacked]){
         oldestUnacked = (oldestUnacked + 1) % SEQSPACE;
+        needToStopTimer = true;
       }
 
       if (needToStopTimer){
         /*stop timer*/
         stoptimer(A);
         timer_running = false;
+        needToStopTimer = false;
       }
 
       /*Unless we have reached the end of the received packets, restart timer for next oldest unACKed packet*/
