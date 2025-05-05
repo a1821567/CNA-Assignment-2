@@ -167,7 +167,7 @@ void A_timerinterrupt(void)
   if (TRACE > 0)
     printf("----A: time out,resend packets!\n");
 
-  for(i=0; i<WINDOWSIZE; i++) {
+  for(i=0; i<WINDOWSIZE; i++) { /*i may go beyond the actual window, but that should not cause any problems as extra packets will not actually be sent*/
     int seq = (oldestUnacked + i) % SEQSPACE; /* seqnums to loop over*/
 
     /* Resend packets that have already been sent but have not been ACKed*/
