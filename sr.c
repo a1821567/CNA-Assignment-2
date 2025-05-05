@@ -177,11 +177,11 @@ void A_timerinterrupt(void)
     if (sent[seq] && !acked[seq]){
       tolayer3(A, buffer[seq]);
       packets_resent++;
-
-      starttimer(A, RTT);
-      timer_running = true;
     }
   }
+
+  starttimer(A, RTT);
+  timer_running = true;
 }
 
 
