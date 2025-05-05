@@ -145,7 +145,7 @@ void A_input(struct pkt packet)
       }
 
       /*Unless we have reached the end of the received packets, restart timer for next oldest unACKed packet*/
-      if (oldestUnacked != A_nextseqnum){
+      if (oldestUnacked != A_nextseqnum && !timer_running){
         starttimer(A, RTT);
         timer_running = true;
       }
