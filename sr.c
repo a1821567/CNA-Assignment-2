@@ -120,6 +120,8 @@ void A_output(struct msg message)
 */
 void A_input(struct pkt packet)
 {
+  bool needToStopTimer = false;
+  
   /* if received ACK is not corrupted */
   if (!IsCorrupted(packet)) {
     if (TRACE > 0)
@@ -138,7 +140,9 @@ void A_input(struct pkt packet)
       /* update the oldest unACKed packet if necessary*/
       while (acked[oldestUnacked]){
         oldestUnacked = (oldestUnacked + 1) % SEQSPACE;
+      }
 
+      if (needToStopTimer){
         /*stop timer*/
         stoptimer(A);
         timer_running = false;
