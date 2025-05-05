@@ -170,11 +170,11 @@ void A_timerinterrupt(void)
   for(i=0; i<WINDOWSIZE; i++) {
     int seq = (oldestUnacked + i) % SEQSPACE; /* seqnums to loop over*/
 
-    if (TRACE > 0)
-      printf ("---A: resending packet %d\n", seq);
-
     /* Resend packets that have already been sent but have not been ACKed*/
     if (sent[seq] && !acked[seq]){
+      if (TRACE > 0)
+        printf ("---A: resending packet %d\n", seq);
+    
       tolayer3(A, buffer[seq]);
       packets_resent++;
     }
